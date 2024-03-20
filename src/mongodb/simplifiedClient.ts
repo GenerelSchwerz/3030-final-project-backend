@@ -1,5 +1,5 @@
 import { Collection, Db, MongoClient, MongoClientOptions } from 'mongodb'
-import { BaseUserSchema, OTPVerifying } from '../schemas'
+import { BaseUserSchema, ChannelSchema, OTPVerifying } from '../schemas'
 import {z} from 'zod'
 
 export class MongoDBClient {
@@ -36,5 +36,10 @@ export class MongoDBClient {
 
   get otpCollection (): Collection<OTPVerifying> {
     return this._client.db().collection('otp')
+  }
+
+
+  get channelCollection (): Collection<z.infer<typeof ChannelSchema>>{
+    return this._client.db().collection('channels')
   }
 }

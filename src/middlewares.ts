@@ -1,32 +1,38 @@
-import { RequestHandler } from "express";
+import { RequestHandler, Request } from "express";
 import { MongoDBClient } from "./mongodb/simplifiedClient";
 import { z } from "zod";
+import { getToken } from "./utils";
+import { PotentialCustomData } from "./types";
 
 export const buildLoggedIn =
   (mongoClient: MongoDBClient): RequestHandler =>
   async (req, res, next) => {
-    if (!req.cookies || req.cookies.token) {
-      res.status(401).send({error: "Not logged in"});
+    const token = getToken(req)
+
+    if (token == null) {
+      res.status(401).send({error: "Not logged in 1"});
       // res.redirect("/login");
       return;
     }
 
-    const cursor = mongoClient.usersCollection.findOne({ token: req.cookies.token });
+    const user = mongoClient.usersCollection.findOne({ token });
 
-    if (!cursor) {
-      res.status(401).send({error: "Not logged in"});
+    if (!user) {
+      res.status(401).send({error: "Not logged in 2"});
       // res.redirect("/login");
       return;
     }
 
+    res.locals.user = user;
     next();
   };
 
 export const redirIfLoggedIn =
   (mongoClient: MongoDBClient, redirUrl: string): RequestHandler =>
   async (req, res, next) => {
-    if (req.cookies.token) {
-      const cursor = await mongoClient.usersCollection.findOne({ token: req.cookies.token });
+    const token = getToken(req);
+    if (token != null) {
+      const cursor = await mongoClient.usersCollection.findOne({ token });
       if (cursor != null) {
         res.redirect(redirUrl);
         return;
@@ -74,3 +80,5 @@ export const buildZodSchemaVerif =
 
     next();
   };
+
+
