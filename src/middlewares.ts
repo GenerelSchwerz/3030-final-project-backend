@@ -44,7 +44,7 @@ export const bodyToJson: RequestHandler = (req, res, next) => {
  * @param schema A zod schema
  * @returns
  */
-export const verifyZodSchema = (schema: z.ZodUnknown): RequestHandler => async (req, res, next) => {
+export const verifyZodSchema = <Obj extends z.ZodObject<any>>(schema: Obj): RequestHandler => async (req, res, next) => {
   const result = await schema.safeParseAsync(req.body)
 
   if (!result.success) {
