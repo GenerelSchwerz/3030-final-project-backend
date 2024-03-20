@@ -1,5 +1,6 @@
-import { MongoClient, MongoClientOptions, ServerApiVersion } from 'mongodb'
-
+import { Collection, Db, MongoClient, MongoClientOptions } from 'mongodb'
+import { BaseUserSchema, OTPVerifying } from '../schemas'
+import {z} from 'zod'
 
 export class MongoDBClient {
   private readonly _client: MongoClient
@@ -16,19 +17,24 @@ export class MongoDBClient {
     await this._client.close()
   }
 
-  get client () {
+  get client (): MongoClient {
     return this._client
   }
 
-  get uriDB () {
+  get uriDB (): Db {
     return this._client.db()
   }
 
-  get loginCollection () {
+  get loginCollection (): Collection {
     return this._client.db().collection('login')
   }
 
-  get usersCollection () {
+  get usersCollection (): Collection<z.infer<typeof BaseUserSchema>> {
     return this._client.db().collection('users')
+  }
+
+
+  get otpCollection (): Collection<OTPVerifying> {
+    return this._client.db().collection('otp')
   }
 }

@@ -1,56 +1,76 @@
-import { RequestHandler } from 'express'
-import { MongoDBClient } from './mongodb/simplifiedClient'
-import { z } from 'zod'
+import { RequestHandler } from "express";
+import { MongoDBClient } from "./mongodb/simplifiedClient";
+import { z } from "zod";
 
-export const buildLoggedIn = (mongoClient: MongoDBClient): RequestHandler => async (req, res, next) => {
-  if (!req.cookies.session) {
-    res.redirect('/login')
-    return
-  }
+export const buildLoggedIn =
+  (mongoClient: MongoDBClient): RequestHandler =>
+  async (req, res, next) => {
+    if (!req.cookies || req.cookies.token) {
+      res.status(401).send({error: "Not logged in"});
+      // res.redirect("/login");
+      return;
+    }
 
-  const cursor = mongoClient.loginCollection.findOne({ session: req.cookies.session })
+    const cursor = mongoClient.usersCollection.findOne({ token: req.cookies.token });
 
-  if (!cursor) {
-    res.redirect('/login')
-    return
-  }
+    if (!cursor) {
+      res.status(401).send({error: "Not logged in"});
+      // res.redirect("/login");
+      return;
+    }
 
-  next()
-}
+    next();
+  };
+
+export const redirIfLoggedIn =
+  (mongoClient: MongoDBClient, redirUrl: string): RequestHandler =>
+  async (req, res, next) => {
+    if (req.cookies.token) {
+      const cursor = await mongoClient.usersCollection.findOne({ token: req.cookies.token });
+      if (cursor != null) {
+        res.redirect(redirUrl);
+        return;
+      }
+    }
+
+    next();
+  };
 
 export const bodyToJson: RequestHandler = (req, res, next) => {
-  const contentType = req.headers['content-type']
+  const contentType = req.headers["content-type"];
 
-  if (contentType !== 'application/json') {
-    res.status(400).send('Invalid content type')
-    return
+  if (contentType !== "application/json") {
+    res.status(400).send({error: "Invalid content type"});
+    return;
   }
 
   // handle streamed content
-  let data = ''
-  req.on('data', chunk => {
-    data += chunk
-  })
+  let data = "";
+  req.on("data", (chunk) => {
+    data = data.concat(chunk);
+  });
 
-  req.on('end', () => {
-    req.body = JSON.parse(data)
-    next()
-  })
-}
+  req.on("end", () => {
+    req.body = JSON.parse(data);
+    next();
+  });
+};
 
 /**
- * Assumes that the body is a JSON object and parses it into a JS object
+ * Assumes that the body is a JSON object and has already been parsed into a JS object
  *
  * @param schema A zod schema
  * @returns
  */
-export const verifyZodSchema = <Obj extends z.ZodObject<any>>(schema: Obj): RequestHandler => async (req, res, next) => {
-  const result = await schema.safeParseAsync(req.body)
+export const buildZodSchemaVerif =
+  <Obj extends z.ZodObject<any>>(schema: Obj): RequestHandler =>
+  async (req, res, next) => {
+    const result = await schema.safeParseAsync(req.body);
 
-  if (!result.success) {
-    res.status(400).send(result.error.errors)
-    return
-  }
+    if (!result.success) {
+      res.status(400).send({error: 'Schema is invalid', details: result.error.errors});
+      return;
+    }
 
-  next()
-}
+    next();
+  };
