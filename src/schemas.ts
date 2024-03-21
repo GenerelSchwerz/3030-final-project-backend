@@ -18,22 +18,6 @@ export const DBPhoneOTPSchema = z.object({
 
 export const DBOTPSchema = z.union([DBEmailOTPSchema, DBPhoneOTPSchema])
 
-export interface EmailOTP {
-  token: string
-  timeout: number
-  timestamp: number /* unix timestamp */
-  email: string
-  emailOtp: string
-}
-
-export interface PhoneOTP {
-  token: string
-  timeout: number
-  timestamp: number /* unix timestamp */
-  phone: string
-  phoneOtp: string
-}
-
 export const BaseListingSchema = z.object({
   title: z.string(),
   description: z.string(),
