@@ -1,4 +1,5 @@
 import * as dotenv from 'dotenv'
+dotenv.config({ path: '.env.local' })
 
 import cookieParser from 'cookie-parser'
 import express from 'express'
@@ -10,7 +11,7 @@ import { setupAPIRouter } from './http'
 import { setupWebsocketServer } from './ws'
 import { EmailClient, TwilioClient } from './clients'
 
-dotenv.config({ path: '.env.local' })
+
 
 const port = process.env.PORT ?? 3000
 const mongourl = process.env.MONGODB_URI

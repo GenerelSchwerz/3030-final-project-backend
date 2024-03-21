@@ -4,7 +4,7 @@
 - [x] Create a new repository on GitHub
 - [x] Connect to MongoDB
 - [x] Expose a REST API
-  - [~] Self  
+  - [x] Self  
     - [x] Login
     - [x] Register
     - [x] Logout

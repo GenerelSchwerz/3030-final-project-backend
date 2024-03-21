@@ -82,7 +82,7 @@ export function setupAPIRouter (options: ApiRouterOptions): express.Router {
       return
     }
 
-    setToken(res, user.token).status(200).json({ token: user.token })
+    setToken(res, user.token).status(200).json({ id: user.id, token: user.token })
   }) as RequestHandler)
 
   const isRegisterSchema = buildZodSchemaVerif(RegisterSchema)
@@ -353,7 +353,7 @@ export function setupAPIRouter (options: ApiRouterOptions): express.Router {
       isNewChannel = false
     }
 
-    res.status(201).json({ id: msg.channelid, isNewChannel })
+    res.status(201).json({ channelid: msg.channelid, messageid: msg.id, isNewChannel })
     sendToAlive({ type: 'recvMessage', data: msg }, ...otherIDs)
   }) as RequestHandler)
 
@@ -388,6 +388,7 @@ export function setupAPIRouter (options: ApiRouterOptions): express.Router {
     const user = res.locals.user
 
     delete user._id
+    delete user.password
     res.status(200).json(user)
   }) as RequestHandler)
 
