@@ -5,6 +5,8 @@ import { once } from 'events'
 import { MongoDBClient } from './mongodb'
 import { WSMessageList, WebsocketMessageSchema, isEmailLoginSchema } from './schemas'
 
+const loginSchema = WebsocketMessageSchema('login')
+
 const handleWSLogin = async (ws: ws, mongoClient: MongoDBClient, wsMap: Map<number, ws>): Promise<number | undefined> => {
   const first: [data: ws.RawData, isBinary: boolean] = (await once(ws, 'message')) as any
 
@@ -19,7 +21,7 @@ const handleWSLogin = async (ws: ws, mongoClient: MongoDBClient, wsMap: Map<numb
     return
   }
 
-  const res0 = await WebsocketMessageSchema('login').safeParseAsync(data)
+  const res0 = await loginSchema.safeParseAsync(data)
 
   if (!res0.success) {
     ws.send(JSON.stringify({ error: 'Invalid data', details: res0.error }))
@@ -87,8 +89,9 @@ function wsMessageHandler (this: ws, data: ws.RawData, isBinary: boolean): void 
 export function setupWebsocketServer (server: http.Server, beginningUri: string, mongoClient: MongoDBClient, wsMap = new Map()): ws.Server {
   const wss = new ws.Server({ noServer: true }) // Remove the 'server' option
 
+  // triggers whenever protocol wants to be upgraded (note: wss://)
   server.on('upgrade', (request, socket, head) => {
-    // Check if the request is for the /api/ws endpoint
+    // ensure correct endpoint, can potentially have different listeners for different endpoints.
     if (request.url === beginningUri + '/ws') {
       wss.handleUpgrade(request, socket, head, (ws) => {
         void handleWSLogin(ws, mongoClient, wsMap)

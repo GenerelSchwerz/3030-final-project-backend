@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ILoginSchema, IMessageSchema } from './types'
 
 export const DBEmailOTPSchema = z.object({
   userid: z.number(),
@@ -116,11 +117,11 @@ export type WSMessageListType = z.infer<typeof WSMessageList>
 type ReturnTypeMap<K extends WSMessageListType | undefined> = K extends undefined
   ? z.ZodType<{ type: WSMessageListType, data: z.ZodUnknown }>
   : K extends 'login'
-    ? z.ZodType<{ type: 'login', data: z.infer<typeof LoginSchema> }>
+    ? z.ZodType<{ type: 'login', data: ILoginSchema }>
     : K extends 'sendMessage'
-      ? z.ZodType<{ type: 'sendMessage', data: z.infer<typeof MessageSchema> }>
+      ? z.ZodType<{ type: 'sendMessage', data: IMessageSchema }>
       : K extends 'recvMessage'
-        ? z.ZodType<{ type: 'recvMessage', data: z.infer<typeof MessageSchema> }>
+        ? z.ZodType<{ type: 'recvMessage', data: IMessageSchema }>
         : never
 
 // me when not knowing proper typing:
