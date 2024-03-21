@@ -8,11 +8,11 @@ export class TwilioClient {
     this.client = twilio(accountSid, authToken)
   }
 
-  static create () {
+  static create (): TwilioClient {
     return new TwilioClient(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_NUMBER)
   }
 
-  public async sendSms (to: string, body: string, from = this.defaultNumber) {
+  public async sendSms (to: string, body: string, from = this.defaultNumber): Promise<string> {
     // verify that the phone number is valid
     if (to.match(/^\+1\d{10}$/) == null) {
       throw new Error('Invalid phone number')

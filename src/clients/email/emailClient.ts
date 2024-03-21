@@ -7,14 +7,14 @@ export class EmailClient {
     this.transport = this.getTransport()
   }
 
-  static create () {
-    return new EmailClient("Gmail", EMAIL_SENDING_ADDRESS, EMAIL_SENDING_PASSWORD)
+  static create (): EmailClient {
+    return new EmailClient('Gmail', EMAIL_SENDING_ADDRESS, EMAIL_SENDING_PASSWORD)
   }
 
-  public getTransport () {
+  public getTransport (): nodemailer.Transporter {
     return nodemailer.createTransport({
-      service: "Gmail",
-      host: "smtp.gmail.com",
+      service: 'Gmail',
+      host: 'smtp.gmail.com',
       port: 465,
       secure: true,
       auth: {
@@ -24,7 +24,7 @@ export class EmailClient {
     })
   }
 
-  public async sendEmail (to: string, text: string, subject: string = '') {
+  public async sendEmail (to: string, text: string, subject: string = ''): Promise<nodemailer.SentMessageInfo> {
     // ensure the email is valid
     if (to.match(/^.+@.+\..+$/) == null) {
       throw new Error('Invalid email address')
