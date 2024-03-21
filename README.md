@@ -14,25 +14,25 @@
     - [x] Get user id from username
     - [x] Get user info from user id
     - [x] Get user listings from user id
-  - [x] Messaging
+  - [~] Messaging
     - [x] Initialize a channel
       - [x] channel between two users
       - [x] channel between multiple users
-      - [x] Recipient(s) receive message via websockets
-      - [ ] Recipient(s) receive message via push notifications 
+    - [x] Recipient(s) receive message via websockets
+    - [ ] Recipient(s) receive message via push notifications 
     - [x] Send a message
       - [x] Send message when initializing channel
       - [x] Send message to already initialized channel
-    - [ ] Get messages
+    - [x] Get messages
       - [x] Get messages from initialized channel
-      - [ ] Get messages from a specific time
-    - [ ] Search
+      - [x] Get messages from a specific time
+    - [x] Search
       - [x] Search for users 
-      - [ ] Search for channels
-      - [ ] Search for messages
-      - [ ] Search for listings
+      - [x] Search for channels
+      - [x] Search for messages
+      - [x] Search for listings
     - [ ] Listings
       - [x] Create a listing 
-      - [ ] Listing has geographical data
+      - [ ] Listing has geographical data (probably do on client).
 -      
   - [x]     
