@@ -1,6 +1,7 @@
 import { z } from 'zod'
-import { BaseUserSchema, RegisterSchema, DBOTPSchema, ChannelSchema, MessageSchema, BaseListingSchema } from './schemas'
 import ws from 'ws'
+
+import { BaseUserSchema, RegisterSchema, DBOTPSchema, ChannelSchema, MessageSchema, BaseListingSchema } from './schemas'
 
 export interface PotentialCustomData {
   user: z.infer<typeof BaseUserSchema>

@@ -1,6 +1,7 @@
 import express, { RequestHandler } from 'express'
-import { MongoDBClient } from './mongodb/simplifiedClient'
+import ws from 'ws'
 
+import { MongoDBClient } from './mongodb'
 import { bodyToJson, buildLoggedIn, buildZodSchemaVerif } from './middlewares'
 import {
   CreateChannelSchema,
@@ -25,9 +26,7 @@ import {
   getUnixTimestamp,
   setToken
 } from './utils'
-import { TwilioClient } from './clients/twilio'
-import { EmailClient } from './clients/email'
-import ws from 'ws'
+import { EmailClient, TwilioClient } from './clients'
 import { IBaseUserSchema, IOTPSchema, IRegisterSchema } from './types'
 
 interface ApiRouterOptions {

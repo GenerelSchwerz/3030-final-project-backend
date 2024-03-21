@@ -64,18 +64,6 @@ export const UsernameLoginSchema = z.object({
 // Combine email and username schemas into a single schema
 export const LoginSchema = z.union([EmailLoginSchema, UsernameLoginSchema])
 
-export function isEmailLoginSchema (data: z.infer<typeof LoginSchema>): data is z.infer<typeof EmailLoginSchema> {
-  return Object.prototype.hasOwnProperty.call(data, 'email')
-}
-
-export function isEmailOTPSchema (data: z.infer<typeof DBOTPSchema>): data is z.infer<typeof DBEmailOTPSchema> {
-  return Object.prototype.hasOwnProperty.call(data, 'email')
-}
-
-export function isPhoneOTPSchema (data: z.infer<typeof DBOTPSchema>): data is z.infer<typeof DBPhoneOTPSchema> {
-  return Object.prototype.hasOwnProperty.call(data, 'phone')
-}
-
 export const RegisterSchema = z.object({
   username: z.string(),
   email: z.string().email(),
@@ -124,6 +112,18 @@ export const ChannelSchema = z.object({
   targetids: z.array(z.number()),
   messages: z.array(MessageSchema)
 })
+
+export function isEmailLoginSchema (data: z.infer<typeof LoginSchema>): data is z.infer<typeof EmailLoginSchema> {
+  return Object.prototype.hasOwnProperty.call(data, 'email')
+}
+
+export function isEmailOTPSchema (data: z.infer<typeof DBOTPSchema>): data is z.infer<typeof DBEmailOTPSchema> {
+  return Object.prototype.hasOwnProperty.call(data, 'email')
+}
+
+export function isPhoneOTPSchema (data: z.infer<typeof DBOTPSchema>): data is z.infer<typeof DBPhoneOTPSchema> {
+  return Object.prototype.hasOwnProperty.call(data, 'phone')
+}
 
 export const WSMessageList = z.enum(['login', 'sendMessage', 'recvMessage'])
 export type WSMessageListType = z.infer<typeof WSMessageList>

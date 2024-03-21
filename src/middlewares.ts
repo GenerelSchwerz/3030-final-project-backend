@@ -1,7 +1,8 @@
 import { RequestHandler } from 'express'
-import { MongoDBClient } from './mongodb'
 import { z } from 'zod'
+
 import { getToken } from './utils'
+import { MongoDBClient } from './mongodb'
 
 export const buildLoggedIn =
   <Ph extends boolean, Em extends Ph extends true ? true : boolean>(mongoClient: MongoDBClient, emailCheck?: Em, phoneCheck?: Ph): RequestHandler =>

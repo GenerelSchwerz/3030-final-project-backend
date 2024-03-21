@@ -1,8 +1,9 @@
 import ws from 'ws'
 import http from 'http'
+import { once } from 'events'
+
 import { MongoDBClient } from './mongodb'
 import { WSMessageList, WebsocketMessageSchema, isEmailLoginSchema } from './schemas'
-import { once } from 'events'
 
 const handleWSLogin = async (ws: ws, mongoClient: MongoDBClient, wsMap: Map<number, ws>): Promise<number | undefined> => {
   const first: [data: ws.RawData, isBinary: boolean] = (await once(ws, 'message')) as any

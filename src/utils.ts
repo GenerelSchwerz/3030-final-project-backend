@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
 import { v4 } from 'uuid'
+import { z } from 'zod'
 
 import { BaseListingSchema, ChannelSchema, CreateListingSchema, CreateMessageSchema, MessageSchema } from './schemas'
-import { z } from 'zod'
 
 export function generateToken (): string {
   return v4()

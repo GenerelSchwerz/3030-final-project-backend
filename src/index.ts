@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv'
 
+import cookieParser from 'cookie-parser'
 import express from 'express'
 import http from 'http'
 import ws from 'ws'
@@ -7,9 +8,7 @@ import ws from 'ws'
 import { MongoDBClient } from './mongodb'
 import { setupAPIRouter } from './http'
 import { setupWebsocketServer } from './ws'
-import { TwilioClient } from './clients/twilio'
-import { EmailClient } from './clients/email'
-import cookieParser from 'cookie-parser'
+import { EmailClient, TwilioClient } from './clients'
 
 dotenv.config({ path: '.env.local' })
 
