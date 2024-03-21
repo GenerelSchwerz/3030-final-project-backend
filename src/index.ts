@@ -4,7 +4,7 @@ import express from 'express'
 import http from 'http'
 import ws from 'ws'
 
-import { MongoDBClient } from './mongodb/simplifiedClient'
+import { MongoDBClient } from './mongodb'
 import { setupAPIRouter } from './http'
 import { setupWebsocketServer } from './ws'
 import { TwilioClient } from './clients/twilio'

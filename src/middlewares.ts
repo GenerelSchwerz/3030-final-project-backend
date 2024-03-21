@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express'
-import { MongoDBClient } from './mongodb/simplifiedClient'
+import { MongoDBClient } from './mongodb'
 import { z } from 'zod'
 import { getToken } from './utils'
 

@@ -1,6 +1,6 @@
 import ws from 'ws'
 import http from 'http'
-import { MongoDBClient } from './mongodb/simplifiedClient'
+import { MongoDBClient } from './mongodb'
 import { WSMessageList, WebsocketMessageSchema, isEmailLoginSchema } from './schemas'
 import { once } from 'events'
 
