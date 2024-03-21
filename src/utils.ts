@@ -2,7 +2,8 @@ import { Request, Response } from 'express'
 import { v4 } from 'uuid'
 import { z } from 'zod'
 
-import { BaseListingSchema, ChannelSchema, CreateListingSchema, CreateMessageSchema, MessageSchema } from './schemas'
+import { CreateListingSchema, CreateMessageSchema } from './schemas'
+import { IBaseListingSchema, IChannelSchema, IMessageSchema } from './types'
 
 export function generateToken (): string {
   return v4()
@@ -36,7 +37,7 @@ export function clearToken (res: Response): Response {
   return res
 }
 
-export function generateDBChannel (orgUserID: number, ...otherUserID: number[]): z.infer<typeof ChannelSchema> {
+export function generateDBChannel (orgUserID: number, ...otherUserID: number[]): IChannelSchema {
   return {
     id: getCurrentMS(),
     creatorid: orgUserID,
@@ -45,7 +46,7 @@ export function generateDBChannel (orgUserID: number, ...otherUserID: number[]):
   }
 }
 
-export function generateDBMessage (body: z.infer<typeof CreateMessageSchema>, senderid: number, channelid: number): z.infer<typeof MessageSchema> {
+export function generateDBMessage (body: z.infer<typeof CreateMessageSchema>, senderid: number, channelid: number): IMessageSchema {
   return {
     id: getCurrentMS(),
     senderid,
@@ -55,7 +56,7 @@ export function generateDBMessage (body: z.infer<typeof CreateMessageSchema>, se
   }
 }
 
-export function generateListing (req: Request<any, any, z.infer<typeof CreateListingSchema>>, creatorid: number): z.infer<typeof BaseListingSchema> {
+export function generateListing (req: Request<any, any, z.infer<typeof CreateListingSchema>>, creatorid: number): IBaseListingSchema {
   return {
     id: getCurrentMS(),
     title: req.body.title,
