@@ -1,14 +1,23 @@
 import { z } from 'zod'
 
-export interface OTPVerifying {
-  token: string
-  timeout: number
-  timestamp: number /* unix timestamp */
-  email?: string
-  emailOtp?: string
-  phone?: string
-  phoneOtp?: string
-}
+export const DBEmailOTPSchema = z.object({
+  userid: z.number(),
+  timeout: z.number(),
+  timestamp: z.number(),
+  email: z.string(),
+  emailOtp: z.string()
+})
+
+export const DBPhoneOTPSchema = z.object({
+  userid: z.number(),
+  timeout: z.number(),
+  timestamp: z.number(),
+  phone: z.string(),
+  phoneOtp: z.string()
+})
+
+export const DBOTPSchema = z.union([DBEmailOTPSchema, DBPhoneOTPSchema])
+
 export interface EmailOTP {
   token: string
   timeout: number
@@ -59,6 +68,14 @@ export function isEmailLoginSchema (data: z.infer<typeof LoginSchema>): data is 
   return Object.prototype.hasOwnProperty.call(data, 'email')
 }
 
+export function isEmailOTPSchema (data: z.infer<typeof DBOTPSchema>): data is z.infer<typeof DBEmailOTPSchema> {
+  return Object.prototype.hasOwnProperty.call(data, 'email')
+}
+
+export function isPhoneOTPSchema (data: z.infer<typeof DBOTPSchema>): data is z.infer<typeof DBPhoneOTPSchema> {
+  return Object.prototype.hasOwnProperty.call(data, 'phone')
+}
+
 export const RegisterSchema = z.object({
   username: z.string(),
   email: z.string().email(),
@@ -77,11 +94,11 @@ export const BaseUserSchema = z.object({
   phoneVerified: z.boolean()
 })
 
-export const OTPVerifyingSchema = z.object({
+export const CreateOTPVerifSchema = z.object({
   otp: z.string().length(6)
 })
 
-export const PhoneOTPSchema = z.object({
+export const CreatePhoneOTPSchema = z.object({
   phone: z.optional(z.string())
 })
 
@@ -107,8 +124,6 @@ export const ChannelSchema = z.object({
   targetids: z.array(z.number()),
   messages: z.array(MessageSchema)
 })
-
-export type IBaseUserSchema = z.infer<typeof BaseUserSchema>
 
 export const WSMessageList = z.enum(['login', 'sendMessage', 'recvMessage'])
 export type WSMessageListType = z.infer<typeof WSMessageList>

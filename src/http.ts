@@ -6,12 +6,12 @@ import {
   CreateChannelSchema,
   CreateListingSchema,
   CreateMessageSchema,
-  EmailOTP,
   LoginSchema,
-  OTPVerifyingSchema,
-  PhoneOTP,
-  PhoneOTPSchema,
-  RegisterSchema
+  CreateOTPVerifSchema,
+  CreatePhoneOTPSchema,
+  RegisterSchema,
+  isEmailOTPSchema,
+  isPhoneOTPSchema
 } from './schemas'
 import {
   clearToken,
@@ -25,11 +25,10 @@ import {
   getUnixTimestamp,
   setToken
 } from './utils'
-import { z } from 'zod'
 import { TwilioClient } from './clients/twilio'
 import { EmailClient } from './clients/email'
 import ws from 'ws'
-import { IBaseUserSchema } from './types'
+import { IBaseUserSchema, IOTPSchema, IRegisterSchema } from './types'
 
 interface ApiRouterOptions {
   optTimeout?: number
@@ -97,7 +96,7 @@ export function setupAPIRouter (options: ApiRouterOptions): express.Router {
       return
     }
 
-    const body = req.body as z.infer<typeof RegisterSchema>
+    const body = req.body as IRegisterSchema
     const token = generateToken()
 
     await mongoClient.usersCollection.insertOne({
@@ -123,7 +122,6 @@ export function setupAPIRouter (options: ApiRouterOptions): express.Router {
   // ========================
 
   apiRouter.post('/emailVerifyStart', isLoggedIn, (async (req, res) => {
-    const token = getToken(req)
     const user = res.locals.user as IBaseUserSchema
 
     if (user.emailVerified) {
@@ -139,25 +137,29 @@ export function setupAPIRouter (options: ApiRouterOptions): express.Router {
     await emailClient.sendEmail(user.email, 'Email Verification', `Your email verification code is: ${emailOtp}`)
 
     await mongoClient.otpCollection.updateOne(
-      { userToken: token },
-      { $set: { userToken: token, email: user.email, emailOtp, timestamp: unixTimestamp, timeout: otpTimeout } },
+      { userID: user.id },
+      { $set: { userID: user.id, email: user.email, emailOtp, timestamp: unixTimestamp, timeout: otpTimeout } },
       { upsert: true }
     )
     res.status(200).json({ otp: emailOtp })
   }) as RequestHandler)
 
-  const isOTPVerifyingSchema = buildZodSchemaVerif(OTPVerifyingSchema)
+  const isOTPVerifyingSchema = buildZodSchemaVerif(CreateOTPVerifSchema)
   apiRouter.post('/emailVerifyFinish', isLoggedIn, bodyToJson, isOTPVerifyingSchema, (async (req, res) => {
     const token = getToken(req)
+    const user = res.locals.user as IBaseUserSchema
 
     // find otp and update it IFF otp is valid and not expired
     // do so with an aggregate
-    const otp1 = await mongoClient.otpCollection.findOne({ userToken: token })
-
-    const otp = otp1 as EmailOTP | null
+    const otp = (await mongoClient.otpCollection.findOne({ userID: user.id })) as IOTPSchema | null
 
     if (otp == null) {
       res.status(400).json({ error: 'No OTP found' })
+      return
+    }
+
+    if (!isEmailOTPSchema(otp)) {
+      res.status(400).json({ error: 'OTP for email not sent out!' })
       return
     }
 
@@ -175,17 +177,15 @@ export function setupAPIRouter (options: ApiRouterOptions): express.Router {
       res.status(200).send()
     }
 
-    if (otp1 != null) {
-      if (otp1.phone != null) {
-        mongoClient.otpCollection.updateOne({ userToken: token }, { $unset: { email: '', emailOtp: '' } }).catch(console.error)
-      } else {
-        mongoClient.otpCollection.deleteOne({ userToken: token }).catch(console.error)
-      }
+    if (isPhoneOTPSchema(otp)) {
+      mongoClient.otpCollection.updateOne({ userID: user.id }, { $unset: { email: '', emailOtp: '' } }).catch(console.error)
+    } else {
+      mongoClient.otpCollection.deleteOne({ userID: user.id }).catch(console.error)
     }
   }) as RequestHandler)
 
-  const isPhoneOTPSchema = buildZodSchemaVerif(PhoneOTPSchema)
-  apiRouter.post('/phoneVerifyStart', isLoggedIn, bodyToJson, isPhoneOTPSchema, (async (req, res) => {
+  const isRecvPhoneOTPSchema = buildZodSchemaVerif(CreatePhoneOTPSchema)
+  apiRouter.post('/phoneVerifyStart', isLoggedIn, bodyToJson, isRecvPhoneOTPSchema, (async (req, res) => {
     const token = getToken(req)
 
     const user = res.locals.user as IBaseUserSchema
@@ -209,8 +209,8 @@ export function setupAPIRouter (options: ApiRouterOptions): express.Router {
     await twilioClient.sendSms(phone, `Your phone verification code is: ${phoneOTP}`)
 
     await mongoClient.otpCollection.updateOne(
-      { userToken: token },
-      { $set: { userToken: token, phone: user.phone, phoneOtp: phoneOTP, timestamp: unixTimestamp, timeout: otpTimeout } },
+      { userID: user.id },
+      { $set: { userID: user.id, phone: user.phone, phoneOtp: phoneOTP, timestamp: unixTimestamp, timeout: otpTimeout } },
       { upsert: true }
     )
 
@@ -223,15 +223,19 @@ export function setupAPIRouter (options: ApiRouterOptions): express.Router {
 
   apiRouter.post('/phoneVerifyFinish', isLoggedIn, bodyToJson, isOTPVerifyingSchema, (async (req, res) => {
     const token = getToken(req)
+    const user = res.locals.user as IBaseUserSchema
 
     // find otp and update it IFF otp is valid and not expired
     // do so with an aggregate
-    const otp1 = await mongoClient.otpCollection.findOne({ userToken: token })
-
-    const otp = otp1 as PhoneOTP | null
+    const otp = await mongoClient.otpCollection.findOne({ userID: user.id })
 
     if (otp == null) {
       res.status(400).json({ error: 'No OTP found' })
+      return
+    }
+
+    if (!isPhoneOTPSchema(otp)) {
+      res.status(400).json({ error: 'OTP for phone not sent out!' })
       return
     }
 
@@ -251,14 +255,10 @@ export function setupAPIRouter (options: ApiRouterOptions): express.Router {
       res.status(200).send()
     }
 
-    if (otp1 != null) {
-      if (otp1.email != null) {
-        // if email exists, simply delete phoneOTP and phone from otpCollection
-        mongoClient.otpCollection.updateOne({ userToken: token }, { $unset: { phone: '', phoneOtp: '' } }).catch(console.error)
-      } else {
-        // else, delete the whole document
-        mongoClient.otpCollection.deleteOne({ userToken: token }).catch(console.error)
-      }
+    if (isEmailOTPSchema(otp)) {
+      mongoClient.otpCollection.updateOne({ userID: user.id }, { $unset: { phone: '', phoneOtp: '' } }).catch(console.error)
+    } else {
+      mongoClient.otpCollection.deleteOne({ userID: user.id }).catch(console.error)
     }
   }) as RequestHandler)
 

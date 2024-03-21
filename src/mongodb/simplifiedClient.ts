@@ -1,6 +1,5 @@
 import { Collection, Db, MongoClient, MongoClientOptions } from 'mongodb'
-import { BaseListingSchema, BaseUserSchema, ChannelSchema, OTPVerifying } from '../schemas'
-import { z } from 'zod'
+import { IBaseListingSchema, IBaseUserSchema, IChannelSchema, IOTPSchema } from '../types'
 
 export class MongoDBClient {
   private readonly _client: MongoClient
@@ -29,19 +28,19 @@ export class MongoDBClient {
     return this._client.db().collection('login')
   }
 
-  get usersCollection (): Collection<z.infer<typeof BaseUserSchema>> {
+  get usersCollection (): Collection<IBaseUserSchema> {
     return this._client.db().collection('users')
   }
 
-  get otpCollection (): Collection<OTPVerifying> {
+  get otpCollection (): Collection<IOTPSchema> {
     return this._client.db().collection('otp')
   }
 
-  get channelCollection (): Collection<z.infer<typeof ChannelSchema>> {
+  get channelCollection (): Collection<IChannelSchema> {
     return this._client.db().collection('channels')
   }
 
-  get listingCollection (): Collection<z.infer<typeof BaseListingSchema>> {
+  get listingCollection (): Collection<IBaseListingSchema> {
     return this._client.db().collection('listings')
   }
 }
