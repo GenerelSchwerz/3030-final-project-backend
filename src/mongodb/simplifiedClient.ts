@@ -1,5 +1,5 @@
 import { Collection, Db, MongoClient, MongoClientOptions } from 'mongodb'
-import { BaseUserSchema, ChannelSchema, OTPVerifying } from '../schemas'
+import { BaseListingSchema, BaseUserSchema, ChannelSchema, OTPVerifying } from '../schemas'
 import {z} from 'zod'
 
 export class MongoDBClient {
@@ -41,5 +41,10 @@ export class MongoDBClient {
 
   get channelCollection (): Collection<z.infer<typeof ChannelSchema>>{
     return this._client.db().collection('channels')
+  }
+
+
+  get listingCollection (): Collection<z.infer<typeof BaseListingSchema>>{
+    return this._client.db().collection('listings')
   }
 }

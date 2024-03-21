@@ -26,6 +26,21 @@ export type PhoneOTP = {
   phoneOtp: string;
 };
 
+export const BaseListingSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  price: z.number(),
+  location: z.string(), // TODO: impl. lat. and lng.
+  id: z.number(),
+  creatorid: z.number(),
+});
+
+export const CreateListingSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  price: z.number(),
+});
+
 export const LoginSchema = z.object({
   username: z.string(),
   password: z.string(),
@@ -54,8 +69,11 @@ export const OTPVerifyingSchema = z.object({
 });
 
 export const PhoneOTPSchema = z.object({
-  otp: z.string().length(6),
   phone: z.optional(z.string()),
+});
+
+export const CreateMessageSchema = z.object({
+  content: z.string(),
 });
 
 export const MessageSchema = z.object({
@@ -65,6 +83,11 @@ export const MessageSchema = z.object({
     content: z.string(),
 });
 
+export const CreateChannelSchema = z.object({
+    targetids: z.array(z.number()),
+    message: CreateMessageSchema,
+});
+
 export const ChannelSchema = z.object({
     id: z.number(),
     creatorid: z.number(),
@@ -72,7 +95,7 @@ export const ChannelSchema = z.object({
     messages: z.array(MessageSchema),
 });
 
-export const WSMessageList = z.enum(["login", "sendMessage"]);
+export const WSMessageList = z.enum(["login", "sendMessage", "recvMessage"]);
 export type WSMessageListType = z.infer<typeof WSMessageList>;
 
 type LoginSchema = z.infer<typeof LoginSchema>;
@@ -85,6 +108,8 @@ type ReturnTypeMap<K extends WSMessageListType | undefined> = K extends undefine
   ? z.ZodType<{ type: "login"; data: LoginSchema }>
   : K extends "sendMessage"
   ? z.ZodType<{ type: "sendMessage"; data: MessageSchema }>
+  : K extends "recvMessage"
+  ? z.ZodType<{ type: "recvMessage"; data: MessageSchema }>
   : never;
 
 // me when not knowing proper typing:
@@ -96,6 +121,8 @@ export const WebsocketMessageSchema = <K extends WSMessageListType>(key?: K): Re
       return z.object({ type: z.literal("login"), data: LoginSchema }) as any;
     case "sendMessage":
       return z.object({ type: z.literal("sendMessage"), data: MessageSchema }) as any;
+    case "recvMessage":
+      return z.object({ type: z.literal("recvMessage"), data: MessageSchema }) as any;
     default:
       throw new Error("error");
   }

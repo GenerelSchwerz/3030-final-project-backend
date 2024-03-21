@@ -7,7 +7,7 @@ import { bodyToJson, buildZodSchemaVerif } from "./middlewares";
 import { once } from "events";
 import { z } from "zod";
 
-const handleWSLogin = async (ws: ws, mongoClient: MongoDBClient) => {
+const handleWSLogin = async (ws: ws, mongoClient: MongoDBClient, wsMap: Map<number, ws>): Promise<number | undefined> => {
   const first: [data: ws.RawData, isBinary: boolean] = (await once(ws, "message")) as any;
 
   // first, parse the data to json
@@ -42,7 +42,10 @@ const handleWSLogin = async (ws: ws, mongoClient: MongoDBClient) => {
 
   // tslint:disable-next-line: no-string-literal
   delete (user as any)["_id"];
+
+  wsMap.set(user.id, ws);
   ws.send(JSON.stringify(user));
+  return user.id;
 };
 
 async function wsMessageHandler(this: ws, data: ws.RawData, isBinary: boolean)  {
@@ -79,16 +82,24 @@ async function wsMessageHandler(this: ws, data: ws.RawData, isBinary: boolean)  
 
 };
 
-export function setupWebsocketServer(server: http.Server, httpRouter: express.Router, mongoClient: MongoDBClient) {
+export function setupWebsocketServer(server: http.Server, httpRouter: express.Router, mongoClient: MongoDBClient, wsMap = new Map()): ws.Server {
   const wss = new ws.Server({ server });
+
+
 
   // const isLoginSchema = buildZodSchemaVerif(LoginSchema);
   wss.on("connection", async (ws, req) => {
-    await handleWSLogin(ws, mongoClient);
+    const wsid = await handleWSLogin(ws, mongoClient, wsMap);
+    if (wsid == null) return;
 
     ws.on("message", wsMessageHandler);
     ws.once("close", () => {
       ws.off("message", wsMessageHandler);
+      wsMap.delete(wsid);
     })
   });
+
+  return wss;
+
+
 }

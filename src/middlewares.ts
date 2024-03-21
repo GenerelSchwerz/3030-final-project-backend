@@ -5,21 +5,34 @@ import { getToken } from "./utils";
 import { PotentialCustomData } from "./types";
 
 export const buildLoggedIn =
-  (mongoClient: MongoDBClient): RequestHandler =>
+  <Ph extends boolean, Em extends Ph extends true ? true : boolean>(mongoClient: MongoDBClient, emailCheck?: Em, phoneCheck?: Ph): RequestHandler =>
   async (req, res, next) => {
     const token = getToken(req)
 
+    const phoneC = phoneCheck === true ? true : false;
+    const emailC = phoneC === false ? emailCheck:  true;
+  
     if (token == null) {
-      res.status(401).send({error: "Not logged in 1"});
+      res.status(401).send({error: "No token provided"});
       // res.redirect("/login");
       return;
     }
 
-    const user = mongoClient.usersCollection.findOne({ token });
+    const user = await mongoClient.usersCollection.findOne({ token });
 
     if (!user) {
-      res.status(401).send({error: "Not logged in 2"});
+      res.status(401).send({error: "Invalid token provided"});
       // res.redirect("/login");
+      return;
+    }
+
+    if (emailC && !user.emailVerified) {
+      res.status(400).send({error: "Email not verified"});
+      return;
+    }
+
+    if (phoneC && !user.phoneVerified) {
+      res.status(400).send({error: "Phone not verified"});
       return;
     }
 

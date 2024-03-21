@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { v4 } from 'uuid'
 
-import { ChannelSchema } from './schemas';
+import { BaseListingSchema, ChannelSchema, CreateListingSchema, CreateMessageSchema, MessageSchema } from './schemas';
 import { z } from 'zod';
 
 export function generateToken (): string {
@@ -39,11 +39,32 @@ export function clearToken(res: Response): Response {
 }
 
 
-export function generateChannel(orgUserID: number, ...otherUserID: number[]): z.infer<typeof ChannelSchema> {
+export function generateDBChannel(orgUserID: number, ...otherUserID: number[]): z.infer<typeof ChannelSchema> {
   return {
     id: getCurrentMS(),
     creatorid: orgUserID,
     targetids: otherUserID,
     messages: []
+  }
+}
+
+export function generateDBMessage(body: z.infer<typeof CreateMessageSchema>, senderid: number, channelid: number): z.infer<typeof MessageSchema> {
+  return {
+    id: getCurrentMS(),
+    senderid,
+    channelid,
+    content: body.content,
+  
+  }
+}
+
+export function generateListing(req: Request<any, any, z.infer<typeof CreateListingSchema>>, creatorid: number): z.infer<typeof BaseListingSchema> {
+  return {
+    id: getCurrentMS(),
+    title: req.body.title,
+    description: req.body.description,
+    price: req.body.price,
+    creatorid,
+    location: req.ip ?? "unknown",
   }
 }
