@@ -1,6 +1,5 @@
 import ws from 'ws'
 import http from 'http'
-import express from 'express'
 import { MongoDBClient } from './mongodb/simplifiedClient'
 import { WSMessageList, WebsocketMessageSchema, isEmailLoginSchema } from './schemas'
 import { once } from 'events'
@@ -84,27 +83,29 @@ function wsMessageHandler (this: ws, data: ws.RawData, isBinary: boolean): void 
   }
 }
 
-export function setupWebsocketServer (
-  server: http.Server,
-  httpRouter: express.Router,
-  mongoClient: MongoDBClient,
-  wsMap = new Map()
-): ws.Server {
-  const wss = new ws.Server({ server })
+export function setupWebsocketServer (server: http.Server, beginningUri: string, mongoClient: MongoDBClient, wsMap = new Map()): ws.Server {
+  const wss = new ws.Server({ noServer: true }) // Remove the 'server' option
 
-  // const isLoginSchema = buildZodSchemaVerif(LoginSchema);
-  wss.on('connection', (ws, req) => {
-    void handleWSLogin(ws, mongoClient, wsMap)
-      .then((wsid) => {
-        if (wsid == null) return
+  server.on('upgrade', (request, socket, head) => {
+    // Check if the request is for the /api/ws endpoint
+    if (request.url === beginningUri + '/ws') {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        void handleWSLogin(ws, mongoClient, wsMap)
+          .then((wsid) => {
+            if (wsid == null) return
 
-        ws.on('message', wsMessageHandler)
-        ws.once('close', () => {
-          ws.off('message', wsMessageHandler)
-          wsMap.delete(wsid)
-        })
+            ws.on('message', wsMessageHandler)
+            ws.once('close', () => {
+              ws.off('message', wsMessageHandler)
+              wsMap.delete(wsid)
+            })
+          })
+          .catch(console.error)
       })
-      .catch(console.error)
+    } else {
+      // cleanly close connection
+      socket.end()
+    }
   })
 
   return wss
