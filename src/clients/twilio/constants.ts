@@ -1,3 +1,3 @@
 export const TWILIO_NUMBER = '+18333760952'
-export const TWILIO_ACCOUNT_SID = 'AC8d90a214c8e1f7d4be7f3894cf513c84'
-export const TWILIO_AUTH_TOKEN = 'fd771af1d3d6aaefb83f961c71ca57e1'
+export const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || ''
+export const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || ''
