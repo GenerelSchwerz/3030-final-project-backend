@@ -1,0 +1,38 @@
+# Progress Report
+
+## Day 1
+- [x] Create a new repository on GitHub
+- [x] Connect to MongoDB
+- [x] Expose a REST API
+  - [~] Self  
+    - [x] Login
+    - [x] Register
+    - [x] Logout
+    - [x] Get self info from DB
+    - [x] Get self listings from DB
+  - [x] User  
+    - [x] Get user id from username
+    - [x] Get user info from user id
+    - [x] Get user listings from user id
+  - [x] Messaging
+    - [x] Initialize a channel
+      - [x] channel between two users
+      - [x] channel between multiple users
+      - [x] Recipient(s) receive message via websockets
+      - [ ] Recipient(s) receive message via push notifications 
+    - [x] Send a message
+      - [x] Send message when initializing channel
+      - [x] Send message to already initialized channel
+    - [ ] Get messages
+      - [x] Get messages from initialized channel
+      - [ ] Get messages from a specific time
+    - [ ] Search
+      - [x] Search for users 
+      - [ ] Search for channels
+      - [ ] Search for messages
+      - [ ] Search for listings
+    - [ ] Listings
+      - [x] Create a listing 
+      - [ ] Listing has geographical data
+-      
+  - [x]     

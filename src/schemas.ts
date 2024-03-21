@@ -98,7 +98,7 @@ export const ChannelSchema = z.object({
   messages: z.array(MessageSchema)
 })
 
-export function isEmailLoginSchema (data: z.infer<typeof LoginSchema>): data is z.infer<typeof EmailLoginSchema> {
+export function isEmailLoginSchema (data: ILoginSchema): data is z.infer<typeof EmailLoginSchema> {
   return Object.prototype.hasOwnProperty.call(data, 'email')
 }
 
@@ -111,17 +111,18 @@ export function isPhoneOTPSchema (data: z.infer<typeof DBOTPSchema>): data is z.
 }
 
 export const WSMessageList = z.enum(['login', 'sendMessage', 'recvMessage'])
-export type WSMessageListType = z.infer<typeof WSMessageList>
+
+type WSMessageListType = z.infer<typeof WSMessageList>
 
 // Define the return type of the function based on the key
 type ReturnTypeMap<K extends WSMessageListType | undefined> = K extends undefined
   ? z.ZodType<{ type: WSMessageListType, data: z.ZodUnknown }>
   : K extends 'login'
-    ? z.ZodType<{ type: 'login', data: ILoginSchema }>
+    ? z.ZodType<{ type: z.ZodLiteral<"login">, data: ILoginSchema }>
     : K extends 'sendMessage'
-      ? z.ZodType<{ type: 'sendMessage', data: IMessageSchema }>
+      ? z.ZodType<{ type: z.ZodLiteral<'sendMessage'>, data: IMessageSchema }>
       : K extends 'recvMessage'
-        ? z.ZodType<{ type: 'recvMessage', data: IMessageSchema }>
+        ? z.ZodType<{ type: z.ZodLiteral<'recvMessage'>, data: IMessageSchema }>
         : never
 
 // me when not knowing proper typing:
