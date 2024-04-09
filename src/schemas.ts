@@ -20,7 +20,8 @@ export const DBPhoneOTPSchema = z.object({
 export const DBOTPSchema = z.union([DBEmailOTPSchema, DBPhoneOTPSchema])
 
 export const BaseListingSchema = z.object({
-  title: z.string(),
+  name: z.string(),
+  model: z.string(),
   description: z.string(),
   price: z.number(),
   location: z.string(), // TODO: impl. lat. and lng.
@@ -29,7 +30,8 @@ export const BaseListingSchema = z.object({
 })
 
 export const CreateListingSchema = z.object({
-  title: z.string(),
+  name: z.string(),
+  model: z.string(),  
   description: z.string(),
   price: z.number()
 })
@@ -86,11 +88,11 @@ export const MessageSchema = z.object({
   content: z.string()
 })
 
+
 export const CreateChannelSchema = z.object({
   targetids: z.array(z.number()),
-  message: CreateMessageSchema
+  message: z.optional(CreateMessageSchema)
 })
-
 export const ChannelSchema = z.object({
   id: z.number(),
   creatorid: z.number(),

@@ -10,6 +10,7 @@ import { MongoDBClient } from './mongodb'
 import { setupAPIRouter } from './http'
 import { setupWebsocketServer } from './ws'
 import { EmailClient, TwilioClient } from './clients'
+import cors from 'cors';
 
 
 
@@ -23,8 +24,11 @@ if (mongourl == null || mongourl === '') {
 const twilioClient = TwilioClient.create()
 const emailClient = EmailClient.create()
 const mongoClient = new MongoDBClient(mongourl)
+
 const app = express()
 const serv = http.createServer(app)
+
+mongoClient.connect()
 
 const apiUri = '/api/v1'
 
@@ -33,9 +37,10 @@ const httpAPIRouter = setupAPIRouter({ optTimeout: 300, mongodb: mongoClient, tw
 
 setupWebsocketServer(serv, apiUri, mongoClient, wsMap)
 
+app.use(cors());
 app.use(cookieParser())
 app.use(apiUri, httpAPIRouter)
 
 serv.listen(port, () => {
-  console.log('Server is running on port 3000')
+  console.log(`Server is running on port ${port}`)
 })

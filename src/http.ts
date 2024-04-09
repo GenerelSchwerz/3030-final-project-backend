@@ -4,7 +4,6 @@ import ws from "ws";
 import { MongoDBClient } from "./mongodb";
 import { bodyToJson, buildLoggedIn, buildZodSchemaVerif } from "./middlewares";
 import {
-  CreateChannelSchema,
   CreateListingSchema,
   CreateMessageSchema,
   LoginSchema,
@@ -13,6 +12,7 @@ import {
   RegisterSchema,
   isEmailOTPSchema,
   isPhoneOTPSchema,
+  CreateChannelSchema,
 } from "./schemas";
 import {
   clearToken,
@@ -27,7 +27,7 @@ import {
   setToken,
 } from "./utils";
 import { EmailClient, TwilioClient } from "./clients";
-import { IBaseUserSchema, IOTPSchema, IRegisterSchema } from "./types";
+import { IBaseUserSchema, ICreateChannelSchema, IOTPSchema, IRegisterSchema } from "./types";
 
 interface ApiRouterOptions {
   optTimeout?: number;
@@ -323,9 +323,11 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
 
     res.status(200).json({ messages: messages.slice(0, limit) });
   }) as RequestHandler);
+
   const isCreateChannelSchema = buildZodSchemaVerif(CreateChannelSchema);
-  apiRouter.post("/initMessage", isEmailVerified, bodyToJson, isCreateChannelSchema, (async (req, res) => {
+  apiRouter.post("/initChannel", isEmailVerified, bodyToJson, isCreateChannelSchema, (async (req, res) => {
     const otherIDs: number[] = req.body.targetids;
+    const body = req.body as ICreateChannelSchema;
 
     const cursor = await mongoClient.usersCollection.find({ id: { $in: otherIDs } });
     const otherUsers = await cursor.toArray();
@@ -350,19 +352,32 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
 
     let msg;
     let isNewChannel;
-    if (cursor1 == null) {
-      msg = generateDBMessage(req.body.message, res.locals.user.id, channel.id);
-      channel.messages.push(msg);
-      await mongoClient.channelCollection.insertOne(channel);
-      isNewChannel = true;
-    } else {
-      msg = generateDBMessage(req.body.message, res.locals.user.id, cursor1.id);
-      await mongoClient.channelCollection.updateOne({ id: cursor1.id }, { $push: { messages: msg } });
-      isNewChannel = false;
-    }
 
-    res.status(201).json({ channelid: msg.channelid, messageid: msg.id, isNewChannel });
-    sendToAlive({ type: "recvMessage", data: msg }, ...otherIDs);
+
+    if (body.message != null) {
+      if (cursor1 == null) {
+        msg = generateDBMessage(body.message, res.locals.user.id, channel.id);
+        channel.messages.push(msg);
+        await mongoClient.channelCollection.insertOne(channel);
+        isNewChannel = true;
+      } else {
+        msg = generateDBMessage(body.message, res.locals.user.id, cursor1.id);
+        await mongoClient.channelCollection.updateOne({ id: cursor1.id }, { $push: { messages: msg } });
+        isNewChannel = false;
+      }
+
+      res.status(201).json({ channelid: msg.channelid, messageid: msg.id, isNewChannel });
+      sendToAlive({ type: "recvMessage", data: msg }, ...otherIDs);
+    } else {
+      if (cursor1 == null) {
+        await mongoClient.channelCollection.insertOne(channel);
+        isNewChannel = true;
+      } else {
+        isNewChannel = false;
+      }
+
+      res.status(201).json({ channelid: channel.id, messageid: null, isNewChannel });
+    }
   }) as RequestHandler);
 
   const isMessageSchema = buildZodSchemaVerif(CreateMessageSchema);
@@ -524,6 +539,33 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
     res.status(200).json(listing);
   }) as RequestHandler);
 
+  apiRouter.get("/listings/featured", (async (req, res) => {
+    const limitStr = (req.query.limit as string) ?? "50";
+    const afterStr = (req.query.after as string) ?? "0";
+
+    let limit = parseInt(limitStr);
+    let after = parseInt(afterStr);
+    if (isNaN(limit)) limit = 50;
+    else limit = Math.min(50, limit);
+    if (isNaN(after)) after = 0;
+
+    const cursor = await mongoClient.listingCollection.find({});
+
+    const listings = [];
+
+    let i = 0;
+    for (let item = await cursor.next(); i < limit && item != null; item = await cursor.next()) {
+      if (item.id <= after) continue;
+      listings.push(item);
+      i++;
+    }
+
+    listings.forEach((listing) => delete (listing as any)._id);
+
+    res.status(200).json(listings);
+
+  }) as RequestHandler);
+
   // ========================
   // Search API
   // ========================
@@ -598,6 +640,8 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
 
     res.status(200).json({listings});
   }) as RequestHandler);
+
+
 
   return apiRouter;
 }

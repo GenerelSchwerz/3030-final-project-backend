@@ -291,6 +291,17 @@ class Client {
     return data;
   }
 
+  async getFeaturedListings() {
+    const response = await this.#get(`${API_URL}/featuredListings`);
+    const data = await response.json();
+
+    if (data.length == null) {
+      throw new Error("Invalid response");
+    }
+
+    return data;
+  }
+
   async createListing(data) {
     const response = await this.#postJSON(`${API_URL}/listing`, data);
     const listing = await response.json();
@@ -306,6 +317,27 @@ class Client {
     return userids.join("-");
   }
 
+  async createChannel(...userids) {
+    const hash = this.#getHashedChannel(...userids);
+
+    if (this.knownChannels.has(hash)) {
+      return this.knownChannels.get(hash);
+    } else {
+      const initMsg = {
+        targetids: userids,
+      };
+      const response = await this.#postJSON(`${API_URL}/initChannel`, initMsg);
+      const respJson = await response.json();
+
+      if (respJson.channelid == null) {
+        throw new Error("Invalid response");
+      }
+
+      this.knownChannels.set(hash, respJson.channelid);
+      return respJson.channelid;
+    }
+  }
+
   async messageUsers(msg, ...userids) {
     const hash = this.#getHashedChannel(...userids);
 
@@ -317,7 +349,7 @@ class Client {
         targetids: userids,
         message: msg,
       };
-      const response = await this.#postJSON(`${API_URL}/initMessage`, initMsg);
+      const response = await this.#postJSON(`${API_URL}/initChannel`, initMsg);
       const respJson = await response.json();
 
       if (respJson.channelid == null) {

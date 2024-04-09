@@ -108,7 +108,7 @@ async function main () {
     const otherListings = await otherListingsResp.json()
     console.log('Other Listings', otherListings)
 
-    const initChannelResp = await makeRequest('http://localhost:3000/api/v1/initMessage', {
+    const initChannelResp = await makeRequest('http://localhost:3000/api/v1/initChannel', {
       method: 'post',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({

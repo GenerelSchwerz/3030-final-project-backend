@@ -59,7 +59,8 @@ export function generateDBMessage (body: z.infer<typeof CreateMessageSchema>, se
 export function generateListing (req: Request<any, any, z.infer<typeof CreateListingSchema>>, creatorid: number): IBaseListingSchema {
   return {
     id: getCurrentMS(),
-    title: req.body.title,
+    name: req.body.name,
+    model: req.body.model,
     description: req.body.description,
     price: req.body.price,
     creatorid,

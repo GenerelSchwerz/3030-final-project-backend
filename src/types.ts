@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import ws from 'ws'
 
-import { BaseUserSchema, RegisterSchema, DBOTPSchema, ChannelSchema, MessageSchema, BaseListingSchema, LoginSchema } from './schemas'
+import { BaseUserSchema, RegisterSchema, DBOTPSchema, ChannelSchema, MessageSchema, BaseListingSchema, LoginSchema, CreateChannelSchema } from './schemas'
 
 export interface PotentialCustomData {
   user: z.infer<typeof BaseUserSchema>
@@ -18,3 +18,4 @@ export type ILoginSchema = z.infer<typeof LoginSchema>
 export type IOTPSchema = z.infer<typeof DBOTPSchema>
 export type IChannelSchema = z.infer<typeof ChannelSchema>
 export type IMessageSchema = z.infer<typeof MessageSchema>
+export type ICreateChannelSchema = z.infer<typeof CreateChannelSchema>
