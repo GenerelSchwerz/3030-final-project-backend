@@ -37,7 +37,10 @@ const httpAPIRouter = setupAPIRouter({ optTimeout: 300, mongodb: mongoClient, tw
 
 setupWebsocketServer(serv, apiUri, mongoClient, wsMap)
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
 app.use(cookieParser())
 app.use(apiUri, httpAPIRouter)
 

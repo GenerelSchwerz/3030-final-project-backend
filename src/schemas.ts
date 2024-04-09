@@ -23,6 +23,7 @@ export const BaseListingSchema = z.object({
   name: z.string(),
   model: z.string(),
   description: z.string(),
+  src: z.optional(z.string()),
   price: z.number(),
   location: z.string(), // TODO: impl. lat. and lng.
   id: z.number(),
@@ -32,6 +33,7 @@ export const BaseListingSchema = z.object({
 export const CreateListingSchema = z.object({
   name: z.string(),
   model: z.string(),  
+  src: z.optional(z.string()),
   description: z.string(),
   price: z.number()
 })

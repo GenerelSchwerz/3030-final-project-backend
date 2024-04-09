@@ -97,6 +97,7 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
 
     const body = req.body as IRegisterSchema;
     const token = generateToken();
+    const id = getCurrentMS()
 
     await mongoClient.usersCollection.insertOne({
       username: body.username,
@@ -104,16 +105,16 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
       phone: body.phone,
       password: body.password,
       token,
-      id: getCurrentMS(),
+      id,
       emailVerified: false,
       phoneVerified: false,
     });
 
-    res.status(201).json({ token });
+    res.status(201).json({ id, token });
   }) as RequestHandler);
 
   apiRouter.get("/logout", isLoggedIn, (async (req, res) => {
-    clearToken(res).status(200).send();
+    clearToken(res).status(200).json({});
   }) as RequestHandler);
 
   // ========================

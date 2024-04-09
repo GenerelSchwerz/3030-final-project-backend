@@ -26,7 +26,7 @@ export function getToken (req: Request): string | undefined {
 }
 
 export function setToken (res: Response, token: string): Response {
-  res.cookie('token', token)
+  res.cookie('token', token, {maxAge: 1000 * 60 * 60 * 24 * 7})
   // res.setHeader("Authorization", token);
   return res
 }
