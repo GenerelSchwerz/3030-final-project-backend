@@ -110,7 +110,7 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
       phoneVerified: false,
     });
 
-    res.status(201).json({ id, token });
+    setToken(res, token).status(201).json({ id, token });
   }) as RequestHandler);
 
   apiRouter.get("/logout", isLoggedIn, (async (req, res) => {
@@ -551,6 +551,7 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
     if (isNaN(after)) after = 0;
 
     const cursor = await mongoClient.listingCollection.find({});
+    cursor.sort({ id: -1 });
 
     const listings = [];
 

@@ -63,6 +63,7 @@ export function generateListing (req: Request<any, any, z.infer<typeof CreateLis
     model: req.body.model,
     description: req.body.description,
     price: req.body.price,
+    src: req.body.src,
     creatorid,
     location: req.ip ?? 'unknown'
   }
