@@ -36,3 +36,17 @@
       - [ ] Listing has geographical data (probably do on client).
 -      
   - [x]     
+
+
+## To run
+npm run start
+
+## To update code
+npm run build
+
+
+## To run latest code (you edited the project)
+npm run build && npm run start
+
+### If port 3000 is used
+npm run build && PORT=3001 npm run start
