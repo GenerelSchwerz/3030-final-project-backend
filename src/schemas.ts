@@ -23,18 +23,24 @@ export const BaseListingSchema = z.object({
   name: z.string(),
   model: z.string(),
   description: z.string(),
-  src: z.optional(z.string()),
+  frontview: z.optional(z.string()),
+  topview: z.optional(z.string()),
+  sideview: z.optional(z.string()),
   price: z.number(),
   location: z.string(), // TODO: impl. lat. and lng.
   id: z.number(),
+  size: z.number(),
   creatorid: z.number()
 })
 
 export const CreateListingSchema = z.object({
   name: z.string(),
-  model: z.string(),  
-  src: z.optional(z.string()),
+  model: z.string(),
+  frontview: z.optional(z.string()),
+  topview: z.optional(z.string()),
+  sideview: z.optional(z.string()),
   description: z.string(),
+  size: z.number(),
   price: z.number()
 })
 
