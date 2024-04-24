@@ -75,17 +75,19 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
       return;
     }
 
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
-
-    console.log(hashedPassword)
-
     // find a user that matches username OR email AND password.
     const user = await mongoClient.usersCollection.findOne({
-      $or: [{ username: req.body.username }, { email: req.body.email }],
-      password: hashedPassword
+      $or: [{ username: req.body.username }, { email: req.body.email }]
     });
 
     if (user == null) {
+      res.status(401).json({ error: "Invalid username or password" });
+      return;
+    }
+
+    const isValid = await bcrypt.compare(req.body.password, user.password);
+
+    if (!isValid) {
       res.status(401).json({ error: "Invalid username or password" });
       return;
     }
@@ -99,7 +101,7 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
     const user = await mongoClient.usersCollection.findOne({ $or: [{ username: req.body.username }, { email: req.body.email }] });
 
     if (user != null) {
-      res.status(400).json({ error: "Email already in use" });
+      res.status(400).json({ error: "Email or username already in use" });
       return;
     }
 
