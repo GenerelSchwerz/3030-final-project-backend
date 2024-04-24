@@ -60,7 +60,7 @@ async function makeRequest (url, options = {}) {
 async function main () {
   try {
     // Make a GET request
-    const responseData = await makeRequest('http://localhost:3000/api/v1/login', {
+    const responseData = await makeRequest('http://localhost:3003/api/v1/login', {
       method: 'post',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -150,5 +150,45 @@ async function main () {
   }
 }
 
+async function alt() {
+
+  try {
+    // Make a GET request
+		const responseData = await makeRequest('http://localhost:3003/api/v1/login', {
+				method: 'post',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({
+				email: 'roccoahching@gmail.com',
+				password: '123'
+			})
+		})
+
+		console.log(await responseData.json());
+
+		for(let i = 0; i <= 10; i++)
+		{
+			let newListingResp = await makeRequest('http://localhost:3003/api/v1/listing', {
+					method: 'post',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({
+					name:"mtest1",
+					model:"3000",
+					frontview:"https://github.com/GenerelSchwerz/3030-final-project-frontend/blob/main/public/exampleTopView.png?raw=true",
+					topview:"https://github.com/GenerelSchwerz/3030-final-project-frontend/blob/main/public/exampleFrontView.png?raw=true",
+					sideview:"https://github.com/GenerelSchwerz/3030-final-project-frontend/blob/main/public/exampleSideView.png?raw=true",
+					description:"asdf",
+					size: 9,
+					price: 100
+				})
+			})
+
+			console.log(await newListingResp.json());
+		}
+	}
+	catch (error) {
+		console.error('An error occurred:', error)
+	}
+}
+
 // Call the main function
-main()
+alt()
