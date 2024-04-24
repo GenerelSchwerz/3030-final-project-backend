@@ -1,12 +1,14 @@
 import { Request, Response } from 'express'
+import jwt from 'jsonwebtoken'
 import { v4 } from 'uuid'
 import { z } from 'zod'
 
 import { CreateListingSchema, CreateMessageSchema } from './schemas'
 import { IBaseListingSchema, IChannelSchema, IMessageSchema } from './types'
 
-export function generateToken (): string {
-  return v4()
+export function generateToken (id: string | number, secret: string): string {
+  if (typeof id === 'number') id = id.toString()
+  return jwt.sign(id, secret)
 }
 
 export function getUnixTimestamp (): number {

@@ -1,8 +1,16 @@
 import { RequestHandler } from 'express'
+import jwt from 'jsonwebtoken'
 import { z } from 'zod'
 
 import { getToken } from './utils'
 import { MongoDBClient } from './mongodb'
+
+
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY
+if (JWT_SECRET_KEY == null || JWT_SECRET_KEY === '') {
+  throw new Error('Invalid/Missing environment  variable: JWT_SECRET_KEY')
+}
+
 
 export const buildLoggedIn =
   <Ph extends boolean, Em extends Ph extends true ? true : boolean>(mongoClient: MongoDBClient, emailCheck?: Em, phoneCheck?: Ph): RequestHandler =>
@@ -14,26 +22,32 @@ export const buildLoggedIn =
       const emailC = !phoneC ? emailCheck : true
 
       if (token == null) {
-        res.status(401).send({ error: 'No token provided' })
+        res.status(401).json({ error: 'No token provided' })
         // res.redirect("/login");
         return
+      }
+
+      const verified = jwt.verify(token, JWT_SECRET_KEY)
+
+      if (verified == null) {
+        res.status(401).json({ error: 'Invalid token provided' })
       }
 
       const user = await mongoClient.usersCollection.findOne({ token })
 
       if (user == null) {
-        res.status(401).send({ error: 'Invalid token provided' })
+        res.status(401).json({ error: 'Invalid token provided' })
         // res.redirect("/login");
         return
       }
 
       if (emailC === true && !user.emailVerified) {
-        res.status(400).send({ error: 'Email not verified' })
+        res.status(400).json({ error: 'Email not verified' })
         return
       }
 
       if (phoneC && !user.phoneVerified) {
-        res.status(400).send({ error: 'Phone not verified' })
+        res.status(400).json({ error: 'Phone not verified' })
         return
       }
 
@@ -60,7 +74,7 @@ export const bodyToJson: RequestHandler = (req, res, next) => {
   const contentType = req.headers['content-type']
 
   if (contentType !== 'application/json') {
-    res.status(400).send({ error: 'Invalid content type' })
+    res.status(400).json({ error: 'Invalid content type' })
     return
   }
 
@@ -88,7 +102,7 @@ export const buildZodSchemaVerif =
       const result = await schema.safeParseAsync(req.body)
 
       if (!result.success) {
-        res.status(400).send({ error: 'Schema is invalid', details: result.error.errors })
+        res.status(400).json({ error: 'Schema is invalid', details: result.error.errors })
         return
       }
 

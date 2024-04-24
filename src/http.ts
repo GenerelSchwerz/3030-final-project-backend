@@ -29,7 +29,10 @@ import {
 import { EmailClient, TwilioClient } from "./clients";
 import { IBaseUserSchema, ICreateChannelSchema, IOTPSchema, IRegisterSchema } from "./types";
 
+import bcrypt from 'bcryptjs'
+
 interface ApiRouterOptions {
+  jwtSecret: string;
   optTimeout?: number;
   mongodb: MongoDBClient;
   twilio: TwilioClient;
@@ -39,6 +42,7 @@ interface ApiRouterOptions {
 
 export function setupAPIRouter(options: ApiRouterOptions): express.Router {
   const apiRouter = express.Router();
+  const jwtSecret = options.jwtSecret;
   const otpTimeout = options.optTimeout ?? 300;
   const mongoClient = options.mongodb;
   const twilioClient = options.twilio;
@@ -71,10 +75,14 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
       return;
     }
 
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
+    console.log(hashedPassword)
+
     // find a user that matches username OR email AND password.
     const user = await mongoClient.usersCollection.findOne({
       $or: [{ username: req.body.username }, { email: req.body.email }],
-      password: req.body.password,
+      password: hashedPassword
     });
 
     if (user == null) {
@@ -96,14 +104,16 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
     }
 
     const body = req.body as IRegisterSchema;
-    const token = generateToken();
     const id = getCurrentMS()
+    const token = generateToken(id, jwtSecret);
+  
+    const hashedPassword = await bcrypt.hash(body.password, 10);
 
     await mongoClient.usersCollection.insertOne({
       username: body.username,
       email: body.email,
       phone: body.phone,
-      password: body.password,
+      password: hashedPassword,
       token,
       id,
       emailVerified: false,
