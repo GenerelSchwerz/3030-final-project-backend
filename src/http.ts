@@ -615,6 +615,7 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
   apiRouter.get("/search/listings", (async (req, res) => {
     const query = req.query.q as string;
 
+    console.log('hey')
     if (query == null) {
       res.status(400).json({ error: "No query provided" });
       return;
@@ -634,9 +635,8 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
 
     const regexPattern = new RegExp(query, "i"); // "i" for case-insensitive search
 
-
     const cursor = await mongoClient.listingCollection.find({
-      $or: [{ title: { $regex: regexPattern } }, { description: { $regex: regexPattern } }],
+      $or: [{ name: { $regex: regexPattern } }, { description: { $regex: regexPattern } }, { model: { $regex: regexPattern } }],
     });
 
     const listings = [];

@@ -17,7 +17,6 @@ export const buildLoggedIn =
     async (req, res, next) => {
       const token = getToken(req)
 
-      console.log(req, req.cookies)
       const phoneC = phoneCheck === true
       const emailC = !phoneC ? emailCheck : true
 
