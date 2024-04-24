@@ -74,7 +74,8 @@ export const BaseUserSchema = z.object({
   id: z.number(),
   token: z.string(),
   emailVerified: z.boolean(),
-  phoneVerified: z.boolean()
+  phoneVerified: z.boolean(),
+  cart: z.array(z.number())
 })
 
 export const CreateOTPVerifSchema = z.object({
@@ -96,11 +97,11 @@ export const MessageSchema = z.object({
   content: z.string()
 })
 
-
 export const CreateChannelSchema = z.object({
   targetids: z.array(z.number()),
   message: z.optional(CreateMessageSchema)
 })
+
 export const ChannelSchema = z.object({
   id: z.number(),
   creatorid: z.number(),

@@ -29,7 +29,7 @@ import {
 import { EmailClient, TwilioClient } from "./clients";
 import { IBaseUserSchema, ICreateChannelSchema, IOTPSchema, IRegisterSchema } from "./types";
 
-import bcrypt from 'bcryptjs'
+import bcrypt from "bcryptjs";
 
 interface ApiRouterOptions {
   jwtSecret: string;
@@ -77,7 +77,7 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
 
     // find a user that matches username OR email AND password.
     const user = await mongoClient.usersCollection.findOne({
-      $or: [{ username: req.body.username }, { email: req.body.email }]
+      $or: [{ username: req.body.username }, { email: req.body.email }],
     });
 
     if (user == null) {
@@ -106,9 +106,9 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
     }
 
     const body = req.body as IRegisterSchema;
-    const id = getCurrentMS()
+    const id = getCurrentMS();
     const token = generateToken(id, jwtSecret);
-  
+
     const hashedPassword = await bcrypt.hash(body.password, 10);
 
     await mongoClient.usersCollection.insertOne({
@@ -120,6 +120,7 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
       id,
       emailVerified: false,
       phoneVerified: false,
+      cart: [],
     });
 
     setToken(res, token).status(201).json({ id, token });
@@ -366,7 +367,6 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
     let msg;
     let isNewChannel;
 
-
     if (body.message != null) {
       if (cursor1 == null) {
         msg = generateDBMessage(body.message, res.locals.user.id, channel.id);
@@ -517,13 +517,65 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
 
   const isListingSchema = buildZodSchemaVerif(CreateListingSchema);
   apiRouter.post("/listing", isLoggedIn, bodyToJson, isListingSchema, (async (req, res) => {
-    const user = res.locals.user;
+    const user = res.locals.user as IBaseUserSchema;
 
     const listing = generateListing(req, user.id);
 
     await mongoClient.listingCollection.insertOne(listing);
 
+    if (user.email != null) {
+      await emailClient.sendEmail(user.email, "Listing Created", `Your listing has been created with the ID: ${listing.id}`);
+    }
+
+    if (user.phone != null) {
+      await twilioClient.sendSms(user.phone, `Your listing has been created with the ID: ${listing.id}`);
+    }
+
     res.status(201).json({ id: listing.id });
+  }) as RequestHandler);
+
+  apiRouter.put("/listing/:id/cart", isLoggedIn, (async (req, res) => {
+    const idStr = req.params.id;
+
+    if (idStr == null) {
+      res.status(400).json({ error: "Invalid listing ID" });
+      return;
+    }
+
+    const id = parseInt(idStr);
+
+    if (isNaN(id)) {
+      res.status(400).json({ error: "Invalid listing ID" });
+      return;
+    }
+
+    const user = res.locals.user as IBaseUserSchema;
+
+    await mongoClient.usersCollection.updateOne({ id: user.id }, { $addToSet: { cart: id } });
+
+    res.status(200).json({ id });
+  }) as RequestHandler);
+
+  apiRouter.delete("/listing/:id/cart", isLoggedIn, (async (req, res) => {
+    const idStr = req.params.id;
+
+    if (idStr == null) {
+      res.status(400).json({ error: "Invalid listing ID" });
+      return;
+    }
+
+    const id = parseInt(idStr);
+
+    if (isNaN(id)) {
+      res.status(400).json({ error: "Invalid listing ID" });
+      return;
+    }
+
+    const user = res.locals.user as IBaseUserSchema;
+
+    await mongoClient.usersCollection.updateOne({ id: user.id }, { $pull: { cart: id } });
+
+    res.status(200).json({ id });
   }) as RequestHandler);
 
   apiRouter.get("/listing/:id", (async (req, res) => {
@@ -603,7 +655,6 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
     listings.forEach((listing) => delete (listing as any)._id);
 
     res.status(200).json(listings);
-
   }) as RequestHandler);
 
   // ========================
@@ -615,7 +666,6 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
   apiRouter.get("/search/listings", (async (req, res) => {
     const query = req.query.q as string;
 
-    console.log('hey')
     if (query == null) {
       res.status(400).json({ error: "No query provided" });
       return;
@@ -678,10 +728,8 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
 
     listings.forEach((listing) => delete (listing as any)._id);
 
-    res.status(200).json({listings});
+    res.status(200).json({ listings });
   }) as RequestHandler);
-
-
 
   return apiRouter;
 }
