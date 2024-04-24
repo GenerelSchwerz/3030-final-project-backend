@@ -29,7 +29,7 @@ export const BaseListingSchema = z.object({
   price: z.number(),
   location: z.string(), // TODO: impl. lat. and lng.
   id: z.number(),
-  size: z.number(),
+  size: z.string(),
   creatorid: z.number()
 })
 
@@ -40,7 +40,7 @@ export const CreateListingSchema = z.object({
   topview: z.optional(z.string()),
   sideview: z.optional(z.string()),
   description: z.string(),
-  size: z.number(),
+  size: z.string(),
   price: z.number()
 })
 
