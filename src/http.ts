@@ -581,6 +581,8 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
   apiRouter.get("/listing/:id", (async (req, res) => {
     const idStr = req.params.id;
 
+
+    console.log(idStr)
     if (idStr == null) {
       res.status(400).json({ error: "Invalid listing ID" });
       return;
@@ -592,6 +594,10 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
       res.status(400).json({ error: "Invalid listing ID" });
       return;
     }
+
+
+    console.log('made it to here')
+
 
     const listing = await mongoClient.listingCollection.findOne({ id });
 
