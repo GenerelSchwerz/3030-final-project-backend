@@ -14,6 +14,7 @@ export class TwilioClient {
 
   public async sendSms (to: string, body: string, from = this.defaultNumber): Promise<string> {
     // verify that the phone number is valid
+	return "youre done for now"
     if (to.match(/^\+1\d{10}$/) == null) {
       throw new Error('Invalid phone number')
     }
