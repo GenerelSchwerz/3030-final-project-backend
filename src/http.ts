@@ -13,6 +13,8 @@ import {
   isEmailOTPSchema,
   isPhoneOTPSchema,
   CreateChannelSchema,
+  BaseListingSchema,
+  PartialBaseListingSchema,
 } from "./schemas";
 import {
   clearToken,
@@ -27,7 +29,7 @@ import {
   setToken,
 } from "./utils";
 import { EmailClient, TwilioClient } from "./clients";
-import { IBaseUserSchema, ICreateChannelSchema, IOTPSchema, IRegisterSchema } from "./types";
+import { IBaseListingSchema, IBaseUserSchema, ICreateChannelSchema, IOTPSchema, IPartialListingSchema, IRegisterSchema } from "./types";
 
 import bcrypt from "bcryptjs";
 
@@ -534,6 +536,51 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
     res.status(201).json({ id: listing.id });
   }) as RequestHandler);
 
+  const isPartialListingSchema = buildZodSchemaVerif(PartialBaseListingSchema);
+  // edit a listing
+  apiRouter.put("/listing/:id", isLoggedIn, bodyToJson, isPartialListingSchema, (async (req, res) => {
+    const idStr = req.params.id;
+
+    if (idStr == null) {
+      res.status(400).json({ error: "Invalid listing ID" });
+      return;
+    }
+
+    const id = parseInt(idStr);
+
+    if (isNaN(id)) {
+      res.status(400).json({ error: "Invalid listing ID" });
+      return;
+    }
+
+    const user = res.locals.user as IBaseUserSchema;
+
+    const listing = await mongoClient.listingCollection.findOne({ id });
+
+    if (listing == null) {
+      res.status(404).json({ error: "Listing not found" });
+      return;
+    }
+
+    if (listing.creatorid !== user.id) {
+      res.status(403).json({ error: "Not authorized" });
+      return;
+    }
+
+    const update = req.body as IPartialListingSchema;
+
+    // ensure no unset keys
+    for (const key in update) {
+      if (typeof (update as any)[key] === 'undefined') {
+        delete (update as any)[key];
+      }
+    }
+
+    await mongoClient.listingCollection.updateOne({ id }, { $set: update });
+
+    res.status(200).json({ id });
+  }) as RequestHandler);
+
   apiRouter.put("/listing/:id/cart", isLoggedIn, (async (req, res) => {
     const idStr = req.params.id;
 
@@ -600,7 +647,7 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
 
 
     const listing = await mongoClient.listingCollection.findOne({ id });
-
+    
     if (listing == null) {
       res.status(404).json({ error: "Listing not found" });
       return;

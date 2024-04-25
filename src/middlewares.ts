@@ -73,6 +73,7 @@ export const bodyToJson: RequestHandler = (req, res, next) => {
   const contentType = req.headers['content-type']
 
   if (contentType !== 'application/json') {
+    console.log(contentType)
     res.status(400).json({ error: 'Invalid content type' })
     return
   }

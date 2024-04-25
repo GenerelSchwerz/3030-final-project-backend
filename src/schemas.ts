@@ -19,6 +19,9 @@ export const DBPhoneOTPSchema = z.object({
 
 export const DBOTPSchema = z.union([DBEmailOTPSchema, DBPhoneOTPSchema])
 
+
+
+
 export const BaseListingSchema = z.object({
   name: z.string(),
   model: z.string(),
@@ -31,6 +34,19 @@ export const BaseListingSchema = z.object({
   id: z.number(),
   size: z.string(),
   creatorid: z.number()
+})
+
+export const PartialBaseListingSchema = z.object({
+  name: z.optional(z.string()),
+  model: z.optional(z.string()),
+  description: z.optional(z.string()),
+  frontview: z.optional(z.string()),
+  topview: z.optional(z.string()),
+  sideview: z.optional(z.string()),
+  price: z.optional(z.number()),
+  location: z.optional(z.string()), // TODO: impl. lat. and lng.
+  size: z.optional(z.string()),
+  creatorid: z.optional(z.number())
 })
 
 export const CreateListingSchema = z.object({
