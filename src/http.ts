@@ -683,6 +683,32 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
     res.status(200).json(listing);
   }) as RequestHandler);
 
+    apiRouter.delete("/listing/:id", (async (req, res) => {
+    const idStr = req.params.id;
+
+    if (idStr == null) {
+      res.status(400).json({ error: "Invalid listing ID" });
+      return;
+    }
+
+    const id = parseInt(idStr);
+
+    if (isNaN(id)) {
+      res.status(400).json({ error: "Invalid listing ID" });
+      return;
+    }
+
+    const listing = await mongoClient.listingCollection.findOneAndDelete({ id });
+
+    if (listing == null) {
+      res.status(404).json({ error: "Listing not found" });
+      return;
+    }
+
+    delete (listing as any)._id;
+    res.status(200).json(listing);
+  }) as RequestHandler);
+
   apiRouter.get("/listings/featured", (async (req, res) => {
     const limitStr = (req.query.limit as string) ?? "50";
     const afterStr = (req.query.after as string) ?? "0";
