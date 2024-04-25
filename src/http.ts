@@ -534,6 +534,24 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
     res.status(201).json({ id: listing.id });
   }) as RequestHandler);
 
+  apiRouter.put("/listing", isLoggedIn, bodyToJson, isListingSchema, (async (req, res) => {
+    const user = res.locals.user as IBaseUserSchema;
+
+    const listing = generateListing(req, user.id);
+
+    await mongoClient.listingCollection.findOneAndUpdate({id: listing.id}, listing);
+
+    if (user.email != null) {
+      await emailClient.sendEmail(user.email, "Listing Edited", `Your listing has been edited with the ID: ${listing.id}`);
+    }
+
+    if (user.phone != null) {
+      await twilioClient.sendSms(user.phone, `Your listing has been edited with the ID: ${listing.id}`);
+    }
+
+    res.status(201).json({ id: listing.id });
+  }) as RequestHandler);
+
   apiRouter.put("/listing/:id/cart", isLoggedIn, (async (req, res) => {
     const idStr = req.params.id;
 
@@ -611,6 +629,32 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
   }) as RequestHandler);
 
   apiRouter.delete("/listing/:id", (async (req, res) => {
+    const idStr = req.params.id;
+
+    if (idStr == null) {
+      res.status(400).json({ error: "Invalid listing ID" });
+      return;
+    }
+
+    const id = parseInt(idStr);
+
+    if (isNaN(id)) {
+      res.status(400).json({ error: "Invalid listing ID" });
+      return;
+    }
+
+    const listing = await mongoClient.listingCollection.findOneAndDelete({ id });
+
+    if (listing == null) {
+      res.status(404).json({ error: "Listing not found" });
+      return;
+    }
+
+    delete (listing as any)._id;
+    res.status(200).json(listing);
+  }) as RequestHandler);
+
+    apiRouter.delete("/listing/:id", (async (req, res) => {
     const idStr = req.params.id;
 
     if (idStr == null) {
