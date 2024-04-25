@@ -60,6 +60,7 @@ export const CreateListingSchema = z.object({
   price: z.number()
 })
 
+
 // Define a schema for the case where email is provided
 export const EmailLoginSchema = z.object({
   email: z.string().email(),

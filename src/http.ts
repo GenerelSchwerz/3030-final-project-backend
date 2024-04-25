@@ -571,7 +571,7 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
 
     // ensure no unset keys
     for (const key in update) {
-      if (typeof (update as any)[key] === 'undefined') {
+      if (typeof (update as any)[key] === "undefined") {
         delete (update as any)[key];
       }
     }
@@ -628,8 +628,7 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
   apiRouter.get("/listing/:id", (async (req, res) => {
     const idStr = req.params.id;
 
-
-    console.log(idStr)
+    console.log(idStr);
     if (idStr == null) {
       res.status(400).json({ error: "Invalid listing ID" });
       return;
@@ -642,12 +641,10 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
       return;
     }
 
-
-    console.log('made it to here')
-
+    console.log("made it to here");
 
     const listing = await mongoClient.listingCollection.findOne({ id });
-    
+
     if (listing == null) {
       res.status(404).json({ error: "Listing not found" });
       return;
@@ -683,7 +680,7 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
     res.status(200).json(listing);
   }) as RequestHandler);
 
-    apiRouter.delete("/listing/:id", (async (req, res) => {
+  apiRouter.delete("/listing/:id", (async (req, res) => {
     const idStr = req.params.id;
 
     if (idStr == null) {
@@ -808,6 +805,34 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
     listings.forEach((listing) => delete (listing as any)._id);
 
     res.status(200).json({ listings });
+  }) as RequestHandler);
+
+  // ========================
+  // Checkout API
+  // ========================
+
+  apiRouter.post("/checkout", isLoggedIn, (async (req, res) => {
+    const user = res.locals.user as IBaseUserSchema;
+
+    const listings = user.cart;
+
+    const cursor = await mongoClient.listingCollection.find({ id: { $in: listings } });
+
+    const items = await cursor.toArray();
+
+    const total = items.reduce((acc, item) => acc + item.price, 0);
+
+    await mongoClient.usersCollection.updateOne({ id: user.id }, { $set: { cart: [] } });
+
+    if (user.email != null) {
+      await emailClient.sendEmail(user.email, "Checkout Successful", `Your total is: $${total.toFixed(2)}`).catch(console.error);
+    }
+
+    if (user.phone != null) {
+      await twilioClient.sendSms(user.phone, `Your total is: $${total.toFixed(2)}`).catch(console.error);
+    }
+
+    res.status(200).json({ total });
   }) as RequestHandler);
 
   return apiRouter;
