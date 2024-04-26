@@ -72,18 +72,20 @@ export function setupAPIRouter(options: ApiRouterOptions): express.Router {
   apiRouter.post("/login", bodyToJson, isLoginSchema, (async (req, res) => {
     const token = getToken(req);
 
-    if (token != null) {
-      res.status(400).json({ error: "Already logged in" });
-      return;
-    }
-
-    // find a user that matches username OR email AND password.
+   // find a user that matches username OR email AND password.
     const user = await mongoClient.usersCollection.findOne({
       $or: [{ username: req.body.username }, { email: req.body.email }],
     });
 
     if (user == null) {
       res.status(401).json({ error: "Invalid username or password" });
+      return;
+    }
+
+    //case where user has a token, but it differs from DB one? is the correct solution?
+    if (token != null && user.token == token) {
+      res.status(400).json({ error: "Already logged in" });
+	    console.log(token);
       return;
     }
 
